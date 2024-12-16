@@ -136,6 +136,7 @@ local function init()
     backgroundMusic.SoundId = "rbxassetid://9041839131"
     backgroundMusic.Volume = 1
     backgroundMusic.Looped = true
+    backgroundMusic:Play()
     setupSleigh()
     for _, player in Players:GetPlayers() do
         onPlayerAdded(player)
