@@ -32,6 +32,14 @@ local function setupSleigh()
     sleighPrompt = proximityPrompt
 end
 
+local function clearUpExistingSleighs(player: Player)
+    for _, sleigh in Workspace:GetChildren() do
+        if sleigh:IsA("Model") and sleigh.Name == tostring(player.UserId) .. "Sleigh" then
+            sleigh:Destroy()
+        end
+    end
+end
+
 local function onSleighPromptTriggered(player: Player)
     local character = player.Character
     if not character then
@@ -41,6 +49,7 @@ local function onSleighPromptTriggered(player: Player)
     if not humanoid or humanoid.Sit then
         return
     end
+    clearUpExistingSleighs(player)
     local sleighClone = sleigh:Clone()
     sleighClone.Name = tostring(player.UserId) .. "Sleigh"
     for _, child in sleighClone:GetChildren() do
