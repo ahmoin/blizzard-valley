@@ -1,9 +1,15 @@
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local sleigh: Model = Workspace:WaitForChild("Sleigh")
 
 local sleighPrompt: ProximityPrompt = nil
+
+local toggleSleightRemote = Instance.new("RemoteEvent")
+toggleSleightRemote.Name = "ToggleSleight"
+toggleSleightRemote.Parent = ReplicatedStorage
 
 local function setupSleigh()
     local hitbox = Instance.new("Part")
@@ -36,6 +42,7 @@ local function onSleighPromptTriggered(player: Player)
         return
     end
     local sleighClone = sleigh:Clone()
+    sleighClone.Name = tostring(player.UserId) .. "Sleigh"
     for _, child in sleighClone:GetChildren() do
         if child:IsA("Model") then
             child:Destroy()
@@ -44,11 +51,11 @@ local function onSleighPromptTriggered(player: Player)
     local hitbox = sleighClone:FindFirstChild("Hitbox")
     if not hitbox or not hitbox:IsA("BasePart") then
         local newHitbox = Instance.new("Part")
+        newHitbox.Anchored = true
+        newHitbox.Transparency = 1
         newHitbox.Name = "Hitbox"
         newHitbox.Size = sleighClone:GetExtentsSize()
         newHitbox.Position = sleighClone:GetPivot().Position
-        newHitbox.Anchored = false
-        newHitbox.Transparency = 1
         newHitbox.CanCollide = false
         newHitbox.CanTouch = false
         newHitbox.CanQuery = false
@@ -58,7 +65,7 @@ local function onSleighPromptTriggered(player: Player)
     if not hitbox or not hitbox:IsA("BasePart") then
         return
     end
-    local seat = Instance.new("VehicleSeat")
+    local seat = Instance.new("Seat")
     seat.Parent = hitbox
     seat.Position = sleighClone:GetPivot().Position
     seat.Transparency = 1
@@ -80,8 +87,19 @@ local function onSleighPromptTriggered(player: Player)
         weldConstraint.Part1 = hitbox
     end
     sleighClone.Parent = Workspace
-    sleighClone:PivotTo(sleigh:GetPivot() * CFrame.new(16, 4, 0))
+    sleighClone:PivotTo(sleigh:GetPivot() * CFrame.new(0, 4, 0))
     seat:Sit(humanoid)
+    toggleSleightRemote:FireClient(player)
+
+    local tweenInfo = TweenInfo.new(
+        256,
+        Enum.EasingStyle.Linear,
+        Enum.EasingDirection.InOut
+    )
+    
+    local targetCFrame = hitbox.CFrame * CFrame.new(0, 0, -2048)
+    local tween = TweenService:Create(hitbox, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
 end
 
 local function onPlayerAdded(player: Player)
