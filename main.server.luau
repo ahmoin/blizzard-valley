@@ -99,10 +99,18 @@ local function onSleighPromptTriggered(player: Player)
     sleighClone.Parent = Workspace
     sleighClone:PivotTo(sleigh:GetPivot() * CFrame.new(0, 4, 0))
     seat:Sit(humanoid)
+    local playerGui = player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui")
+    local screenGui = playerGui:FindFirstChild("SleighScreenGui") or playerGui:WaitForChild("SleighScreenGui")
+    if playerGui and screenGui and screenGui:IsA("ScreenGui") then
+        screenGui.Enabled = true
+    end
     local occupantChangedConnection = nil
     occupantChangedConnection = seat:GetPropertyChangedSignal("Occupant"):Connect(function()
         cleanUpExistingSleighs(player)
         toggleSleightRemote:FireClient(player, true)
+        if playerGui and screenGui and screenGui:IsA("ScreenGui") then
+            screenGui.Enabled = false
+        end
         if occupantChangedConnection and typeof(occupantChangedConnection) == "RBXScriptConnection" then
             occupantChangedConnection:Disconnect()
         end
@@ -128,6 +136,30 @@ local function onPlayerAdded(player: Player)
     local coins = Instance.new("IntValue")
     coins.Name = "Coins"
     coins.Parent = leaderstats
+
+    local playerGui = player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui")
+    if not playerGui or not playerGui:IsA("PlayerGui") then
+        return
+    end
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "SleighScreenGui"
+    screenGui.Parent = playerGui
+    screenGui.Enabled = false
+
+    local frame = Instance.new("Frame")
+    frame.Parent = screenGui
+    frame.AnchorPoint = Vector2.new(0.5, 0)
+    frame.Position = UDim2.new(0.5, 0, 0.75, 0)
+    frame.Size = UDim2.new(0.1, 0, 0.2, 0)
+    frame.BackgroundTransparency = 1
+
+    local imageLabel = Instance.new("ImageLabel")
+    imageLabel.Parent = frame
+    imageLabel.Size = UDim2.new(1, 0, 1, 0)
+    imageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+    imageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+    imageLabel.BackgroundTransparency = 1
+    imageLabel.Image = "rbxassetid://5965306994"
 end
 
 local function init()
