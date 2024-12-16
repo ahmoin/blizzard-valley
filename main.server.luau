@@ -33,7 +33,7 @@ local function setupSleigh()
     sleighPrompt = proximityPrompt
 end
 
-local function clearUpExistingSleighs(player: Player)
+local function cleanUpExistingSleighs(player: Player)
     for _, sleigh in Workspace:GetChildren() do
         if sleigh:IsA("Model") and sleigh.Name == tostring(player.UserId) .. "Sleigh" then
             sleigh:Destroy()
@@ -50,7 +50,7 @@ local function onSleighPromptTriggered(player: Player)
     if not humanoid or humanoid.Sit then
         return
     end
-    clearUpExistingSleighs(player)
+    cleanUpExistingSleighs(player)
     local sleighClone = sleigh:Clone()
     sleighClone.Name = tostring(player.UserId) .. "Sleigh"
     for _, child in sleighClone:GetChildren() do
@@ -99,6 +99,14 @@ local function onSleighPromptTriggered(player: Player)
     sleighClone.Parent = Workspace
     sleighClone:PivotTo(sleigh:GetPivot() * CFrame.new(0, 4, 0))
     seat:Sit(humanoid)
+    local occupantChangedConnection = nil
+    occupantChangedConnection = seat:GetPropertyChangedSignal("Occupant"):Connect(function()
+        cleanUpExistingSleighs(player)
+        toggleSleightRemote:FireClient(player, true)
+        if occupantChangedConnection and typeof(occupantChangedConnection) == "RBXScriptConnection" then
+            occupantChangedConnection:Disconnect()
+        end
+    end)
     toggleSleightRemote:FireClient(player)
 
     local tweenInfo = TweenInfo.new(
