@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 
 local sleigh: Model = Workspace:WaitForChild("Sleigh")
@@ -122,6 +123,11 @@ local function onPlayerAdded(player: Player)
 end
 
 local function init()
+    local backgroundMusic = Instance.new("Sound")
+    backgroundMusic.Parent = SoundService
+    backgroundMusic.SoundId = "rbxassetid://9041839131"
+    backgroundMusic.Volume = 1
+    backgroundMusic.Looped = true
     setupSleigh()
     for _, player in Players:GetPlayers() do
         onPlayerAdded(player)
