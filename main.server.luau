@@ -195,6 +195,7 @@ local function onPlayerAdded(player: Player)
 	end
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "SleighScreenGui"
+	screenGui.ResetOnSpawn = false
 	screenGui.Parent = playerGui
 	screenGui.Enabled = false
 
