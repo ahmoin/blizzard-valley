@@ -156,7 +156,7 @@ local function onSleighPromptTriggered(player: Player)
 	sleighClone:PivotTo(sleigh:GetPivot() * CFrame.new(0, 4, 0))
 	seat:Sit(humanoid)
 	local playerGui = player:FindFirstChildOfClass("PlayerGui") or player:WaitForChild("PlayerGui")
-	local screenGui = playerGui:FindFirstChild("SleighScreenGui") or playerGui:WaitForChild("SleighScreenGui")
+	local screenGui = playerGui:FindFirstChild("SleighScreenGui") or playerGui:WaitForChild("SleighScreenGui", 8)
 	if playerGui and screenGui and screenGui:IsA("ScreenGui") then
 		screenGui.Enabled = true
 	end
