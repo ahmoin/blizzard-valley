@@ -1,16 +1,61 @@
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
+
+local giftTemplate = nil
+repeat
+    for  _, child in Workspace:GetChildren() do
+        if child:IsA("Model") and child.Name == "Gift" then
+            for _, basePart in child:GetChildren() do
+                if basePart:IsA("BasePart") and basePart.Position.X < -17.0 and basePart.Position.X > -17.1 then
+                    giftTemplate = child:Clone()
+                    break
+                end
+            end
+        end
+    end
+    task.wait(0.1)
+until giftTemplate
+
+giftTemplate.Parent = ServerStorage
+local giftTempalteHitbox = Instance.new("Part")
+giftTempalteHitbox.Transparency = 1
+giftTempalteHitbox.Parent = giftTemplate
+giftTempalteHitbox.Size = Vector3.one
+giftTempalteHitbox.Name = "GiftHitbox"
+giftTempalteHitbox.Position = giftTemplate:GetPivot().Position
+giftTempalteHitbox.Anchored = true
+giftTempalteHitbox.CanCollide = false
+for _, child in giftTemplate:GetChildren() do
+    if child:IsA("BasePart") and child ~= giftTempalteHitbox then
+        child.Anchored = false
+        child.CanCollide = false
+        local weldConstraint = Instance.new("WeldConstraint")
+        weldConstraint.Parent = child
+        weldConstraint.Part0 = child
+        weldConstraint.Part1 = giftTempalteHitbox
+    end
+end
+for _, child in giftTemplate:GetChildren() do
+    if child:IsA("BasePart") then
+        child.Massless = true
+    end
+end
 
 local sleigh: Model = Workspace:WaitForChild("Sleigh")
 
 local sleighPrompt: ProximityPrompt = nil
 
-local toggleSleightRemote = Instance.new("RemoteEvent")
-toggleSleightRemote.Name = "ToggleSleight"
-toggleSleightRemote.Parent = ReplicatedStorage
+local toggleSleighRemote = Instance.new("RemoteEvent")
+toggleSleighRemote.Name = "ToggleSleigh"
+toggleSleighRemote.Parent = ReplicatedStorage
+
+local shootGiftRemote = Instance.new("RemoteEvent")
+shootGiftRemote.Name = "ShootGift"
+shootGiftRemote.Parent = ReplicatedStorage
 
 local function setupSleigh()
     local hitbox = Instance.new("Part")
@@ -107,7 +152,7 @@ local function onSleighPromptTriggered(player: Player)
     local occupantChangedConnection = nil
     occupantChangedConnection = seat:GetPropertyChangedSignal("Occupant"):Connect(function()
         cleanUpExistingSleighs(player)
-        toggleSleightRemote:FireClient(player, true)
+        toggleSleighRemote:FireClient(player, true)
         if playerGui and screenGui and screenGui:IsA("ScreenGui") then
             screenGui.Enabled = false
         end
@@ -115,7 +160,7 @@ local function onSleighPromptTriggered(player: Player)
             occupantChangedConnection:Disconnect()
         end
     end)
-    toggleSleightRemote:FireClient(player)
+    toggleSleighRemote:FireClient(player)
 
     local tweenInfo = TweenInfo.new(
         256,
@@ -162,6 +207,38 @@ local function onPlayerAdded(player: Player)
     imageLabel.Image = "rbxassetid://5965306994"
 end
 
+local function onShootGiftEvent(player: Player, direction: Vector3)
+    local playerSleigh = Workspace:FindFirstChild(tostring(player.UserId) .. "Sleigh")
+    if not playerSleigh then
+        return
+    end
+    local playerSleighHitbox = playerSleigh:FindFirstChild("Hitbox")
+    if not playerSleighHitbox or not playerSleighHitbox:IsA("BasePart") then
+        return
+    end
+    local giftClone = giftTemplate:Clone()
+    giftClone:PivotTo(playerSleighHitbox.CFrame * CFrame.new(0, 4, 0))
+    giftClone.Parent = Workspace
+    local giftHitbox = giftClone:FindFirstChild("GiftHitbox")
+    if not giftHitbox or not giftHitbox:IsA("BasePart") then
+        return
+    end
+    giftHitbox.Anchored = false
+    giftHitbox:SetNetworkOwner(nil)
+    local upVelocity = Vector3.new(0, 1024, 0)
+    local giftVelocity = direction * 2048
+    giftHitbox:ApplyImpulse(giftVelocity + upVelocity)
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if not leaderstats or not leaderstats:IsA("Folder") then
+        return
+    end
+    local coins = leaderstats:FindFirstChild("Coins")
+    if not coins or not coins:IsA("IntValue") then
+        return
+    end
+    coins.Value += 1
+end
+
 local function init()
     local backgroundMusic = Instance.new("Sound")
     backgroundMusic.Parent = SoundService
@@ -178,6 +255,7 @@ local function init()
         task.wait(0.1)
     end
     sleighPrompt.Triggered:Connect(onSleighPromptTriggered)
+    shootGiftRemote.OnServerEvent:Connect(onShootGiftEvent)
 end
 
 init()
